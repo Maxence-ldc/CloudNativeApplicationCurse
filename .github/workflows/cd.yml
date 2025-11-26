@@ -14,6 +14,9 @@ jobs:
   deploy:
     name: Deploy to Local Environment
     runs-on: self-hosted
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout code
@@ -21,7 +24,8 @@ jobs:
 
       - name: Create .env file from production template and secrets
         run: |
-          cp .env.production .env
+          cat .env.production > .env
+          echo "" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
