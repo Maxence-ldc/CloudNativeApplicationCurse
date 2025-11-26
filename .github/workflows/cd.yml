@@ -1,0 +1,27 @@
+name: CD - Local Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy to Local Environment
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Stop existing containers
+        run: docker compose down
+        working-directory: ${{ github.workspace }}
+
+      - name: Build and start containers
+        run: docker compose up -d --build
+        working-directory: ${{ github.workspace }}
+
+      - name: Show running containers
+        run: docker compose ps
+        working-directory: ${{ github.workspace }}
