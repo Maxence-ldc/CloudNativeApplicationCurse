@@ -11,7 +11,7 @@ jobs:
   # Backend CI
   backend:
     name: Backend - Install, Test & Lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: ./backend
@@ -40,7 +40,7 @@ jobs:
   # Frontend CI
   frontend:
     name: Frontend - Install, Test & Lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: ./frontend
@@ -69,30 +69,15 @@ jobs:
   # Build Docker Images
   docker:
     name: Build Docker Images
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [backend, frontend]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build Backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: false
-          tags: gym-management-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: docker build -t gym-management-backend:latest ./backend
 
       - name: Build Frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: false
-          tags: gym-management-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: docker build -t gym-management-frontend:latest ./frontend
