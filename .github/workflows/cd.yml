@@ -1,7 +1,10 @@
 name: CD - Local Deployment
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]  # Name of your CI workflow
+    types:
+      - completed
     branches: [main]
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
@@ -14,9 +17,10 @@ jobs:
   deploy:
     name: Deploy to Local Environment
     runs-on: self-hosted
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     defaults:
       run:
-        shell: bash
+        shell: pwsh
 
     steps:
       - name: Checkout code
@@ -24,21 +28,17 @@ jobs:
 
       - name: Create .env file from production template and secrets
         run: |
-          cat .env.production > .env
-          echo "" >> .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-        working-directory: ${{ github.workspace }}
+          $content = Get-Content -Path ".env.production" -Raw
+          $content += "`nPOSTGRES_DB=${{ secrets.POSTGRES_DB }}"
+          $content += "`nPOSTGRES_USER=${{ secrets.POSTGRES_USER }}"
+          $content += "`nPOSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}"
+          $content | Out-File -FilePath ".env" -Encoding utf8NoBOM
 
       - name: Stop existing containers
         run: docker compose down
-        working-directory: ${{ github.workspace }}
 
       - name: Build and start containers
         run: docker compose up -d --build
-        working-directory: ${{ github.workspace }}
 
       - name: Show running containers
         run: docker compose ps
-        working-directory: ${{ github.workspace }}
