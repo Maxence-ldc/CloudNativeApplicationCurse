@@ -1,0 +1,46 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Traefik access logs
+  - job_name: traefik
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: traefik
+          __path__: /var/log/traefik/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: StartUTC
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+  # Backend API logs
+  - job_name: backend
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: backend
+          __path__: /var/log/backend/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            nested_message: message
+      - json:
+          source: nested_message
+          expressions:
+            timestamp: timestamp
+      - timestamp:
+          source: timestamp
+          format: RFC3339

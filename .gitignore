@@ -86,6 +86,8 @@ dist/
 # Logs
 logs
 *.log
+backend/logs/
+api-requests.log
 
 # Editor directories and files
 .vscode/
