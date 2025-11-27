@@ -15,9 +15,15 @@ done
 echo "Applying database migrations..."
 npx prisma migrate deploy
 
-# Seed the database
-echo "Seeding the database..."
-npm run seed
+# Seed the database only if it's empty
+echo "Checking if database needs seeding..."
+USER_COUNT=$(npx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" 2>/dev/null | grep -oE '[0-9]+' | head -1)
+if [ -z "$USER_COUNT" ] || [ "$USER_COUNT" -eq "0" ]; then
+  echo "Database is empty. Seeding..."
+  npm run seed
+else
+  echo "Database already has data (found $USER_COUNT users). Skipping seed."
+fi
 
 # Start the application
 echo "Starting the application..."
